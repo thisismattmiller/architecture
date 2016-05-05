@@ -5,7 +5,7 @@ var currentPopupHref
 
 var legendColorsCount = 5
 var legendColorClass = 'finished-color'
-function getColor(p) {
+function getColor (p) {
   var step = 1 / (legendColorsCount - 2)
 
   if (p < 0.001) {
@@ -17,13 +17,13 @@ function getColor(p) {
   }
 }
 
-function makeAuth(user, password) {
+function makeAuth (user, password) {
   var tok = user + ':' + password
   var hash = btoa(tok)
   return 'Basic ' + hash
 }
 
-function addGitHubAuth(request) {
+function addGitHubAuth (request) {
   if (gitHubAuth.user && gitHubAuth.key) {
     return request
       .header('Authorization', makeAuth(gitHubAuth.user, gitHubAuth.key))
@@ -40,6 +40,11 @@ function createBadge (svg, b, json) {
 
     var badge = d3.select(svg).append('g')
       .attr('class', 'badge')
+      .style('cursor', 'pointer')
+      .on('click', function () {
+        window.open(json.html_url + '/issues/', '_blank')
+        d3.event.stopPropagation()
+      })
 
     badge.append('circle')
       .attr('cx', bbox.x + bbox.width)
@@ -84,11 +89,11 @@ function setItem (key, data) {
   localStorage.setItem(key, str)
 }
 
-function fragmentFromString(htmlStr) {
-  return document.createRange().createContextualFragment(htmlStr);
+function fragmentFromString (htmlStr) {
+  return document.createRange().createContextualFragment(htmlStr)
 }
 
-function makeAbsolute(baseUrl, url) {
+function makeAbsolute (baseUrl, url) {
   var currentUrl = window.location.href.replace(window.location.hash, '')
   if (url.startsWith(currentUrl)) {
     return url.replace(currentUrl, baseUrl)
@@ -96,7 +101,7 @@ function makeAbsolute(baseUrl, url) {
   return url
 }
 
-function fixRelativeLinks(href, html) {
+function fixRelativeLinks (href, html) {
   if (html) {
     var baseUrl = href.replace('https://github.com', 'https://raw.githubusercontent.com') + '/master/'
 
@@ -113,7 +118,7 @@ function fixRelativeLinks(href, html) {
   return html
 }
 
-function getReadmeMarkdown(href, callback) {
+function getReadmeMarkdown (href, callback) {
   var apiUrl = href.replace('https://github.com/', 'https://api.github.com/repos/') + '/readme'
   var htmlStr = getItem(apiUrl)
 
@@ -122,11 +127,11 @@ function getReadmeMarkdown(href, callback) {
   } else {
     addGitHubAuth(d3.html(apiUrl))
       .header('Accept', 'application/vnd.github.VERSION.html')
-      .get(function(err, html) {
+      .get(function (err, html) {
         if (err) {
           setItem(apiUrl, '')
         } else {
-          var htmlStr = new XMLSerializer().serializeToString(html);
+          var htmlStr = new XMLSerializer().serializeToString(html)
           setItem(apiUrl, htmlStr)
         }
         callback(err, fixRelativeLinks(href, html))
@@ -141,23 +146,23 @@ var popupBaseUrls = [
   }
 ]
 
-function hidePopup() {
+function hidePopup () {
   d3.select('#popup')
     .classed('hidden', true)
 }
 
-function createPopup(href, point) {
+function createPopup (href, point) {
   var getContents
 
   for (var i = 0; i < popupBaseUrls.length; i++) {
     if (href.startsWith(popupBaseUrls[i].baseUrl)) {
       getContents = popupBaseUrls[i].getContents
-      break;
+      break
     }
   }
 
   if (getContents) {
-    getContents(href, function(err, html) {
+    getContents(href, function (err, html) {
       if (html) {
         d3.select('#popup')
           .classed('hidden', false)
@@ -173,7 +178,7 @@ function createPopup(href, point) {
 
         // Clear previous contents
         while (popup.firstChild) {
-          popup.removeChild(popup.firstChild);
+          popup.removeChild(popup.firstChild)
         }
 
         // Add contents as child of popup element
@@ -182,7 +187,6 @@ function createPopup(href, point) {
         d3.select('#popup')
           .classed('hidden', true)
       }
-
     })
   } else {
     d3.select('#popup')
@@ -194,10 +198,10 @@ function cumulativeOffset (element) {
   var top = 0
   var left = 0
   do {
-    top += element.offsetTop  || 0
+    top += element.offsetTop || 0
     left += element.offsetLeft || 0
-    element = element.offsetParent;
-  } while (element);
+    element = element.offsetParent
+  } while (element)
 
   return {
     top: top,
@@ -229,8 +233,8 @@ function getPopupLocation (archElement, svgDoc, element) {
   return location
 }
 
-d3.json('data.json', function(err, data) {
-  d3.xml('architecture.svg', function(err, doc) {
+d3.json('data.json', function (err, data) {
+  d3.xml('architecture.svg', function (err, doc) {
     var svg = doc.querySelector('svg')
 
     // Set SVG height & width
@@ -242,7 +246,7 @@ d3.json('data.json', function(err, data) {
     archElement.appendChild(doc.documentElement)
 
     var linkBlocks = document.querySelectorAll('svg a')
-    Array.prototype.forEach.call(linkBlocks, function(b) {
+    Array.prototype.forEach.call(linkBlocks, function (b) {
       var href = b.getAttribute('xl:href')
 
       var done = data[href]
@@ -251,8 +255,12 @@ d3.json('data.json', function(err, data) {
         e.stopPropagation()
         e.preventDefault()
 
+        if (href.search('https://github.com/') === -1) {
+          window.open(href, '_blank')
+        }
+
         var popupShown = !d3.select('#popup')
-          .classed('hidden')
+            .classed('hidden')
 
         if (currentPopupHref !== href || !popupShown) {
           createPopup(href, getPopupLocation(archElement, svg, this))
@@ -260,13 +268,13 @@ d3.json('data.json', function(err, data) {
           hidePopup()
         }
         currentPopupHref = href
-      };
+      }
 
       if (done !== undefined) {
         b.setAttribute('class', getColor(done))
       } else {
         console.error('Link not found in data.json:', href)
-        b.setAttribute('class', 'finished-error')
+      // b.setAttribute('class', 'finished-error')
       }
 
       if (href && href.startsWith('https://github.com/')) {
@@ -277,7 +285,7 @@ d3.json('data.json', function(err, data) {
         } else {
           var apiUrl = href.replace('https://github.com/', 'https://api.github.com/repos/')
 
-          addGitHubAuth(d3.json(apiUrl)).get(function(err, json) {
+          addGitHubAuth(d3.json(apiUrl)).get(function (err, json) {
             if (err) {
               setItem(href, {open_issues_count: 0})
             } else {
@@ -291,13 +299,13 @@ d3.json('data.json', function(err, data) {
 
     // Remove all elements with white background (just leaving the outline)
     var whiteElements = document.querySelectorAll('[fill="white"]')
-    Array.prototype.forEach.call(whiteElements, function(e) {
+    Array.prototype.forEach.call(whiteElements, function (e) {
       e.parentNode.removeChild(e)
     })
 
     // Remove title elements, they cause annoying mouse tooltips
     var titles = document.querySelectorAll('title')
-    Array.prototype.forEach.call(titles, function(e) {
+    Array.prototype.forEach.call(titles, function (e) {
       e.parentNode.removeChild(e)
     })
   })

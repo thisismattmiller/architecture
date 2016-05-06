@@ -23,6 +23,8 @@
   "https://github.com/nypl-registry/serialization-agents" : 1,
   "https://github.com/nypl-registry/index" : 0.5,
   "https://github.com/nypl-registry/registry-api" : 0.5,
-  "https://github.com/nypl-registry/browse" : 0.5
+  "https://github.com/nypl-registry/browse" : 0.5,
+  "https://github.com/nypl-registry/mapping-mms" : 1,
+  "https://github.com/nypl-registry/mapping-tms" : 1
 
 }
